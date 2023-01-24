@@ -1,0 +1,96 @@
+This repository represents my contribution to the project entitled "Approximate Bayesian computation for gene network reverse-engineering" at the University of Strasbourg. 
+
+For the latest version of this project please go to https://user2021.r-project.org/participation/technical_notes/t164/technote/. 
+
+
+In the following
+
+how to create shared object to be called from R
+=========================================================================
+
+The following instructions assume that you have switched to the root directory of this package. (On Linux,type "cd dir/ABCProject" and proceed further). You can also copy the *.so files to your preferred directory and invoke them from R by correctly specifying the path to them.
+
+
+I Network generation 
+----------------------------------------------------
+
+1. Compiling
+
+ The command to compile C code with R is as follows:
+ 
+       MAKEFLAGS='CFLAGS=-Iinclude PKG_CFLAGS=-w' R CMD SHLIB src/network_random_R.c src/graph.c src/motif.c src/utils.c src/pool.c  -o network_random_R.so
+	
+ The network_random_R.c is a C code that realizes the generation of a network according to [1]. The network_random_R.so is a shared object that will be used by R. 
+
+2. Running
+
+ To load the shared object and call the C method from R follow these commands:
+		
+	dyn.load("network_random_R.so")
+    result=.C("run", as.integer(number_genes), as.integer(clust_coef), network=as.integer(1:(number_genes*number_genes)))
+
+
+ Explanation of the parameters:
+
+ run: it is the name of the C function.
+ number_genes: number of genes in the microarray data.
+ clust_coef: clustering coefficient for the modules in the network, for example 0.3.
+ network: saves the generated network.
+
+ Result:
+ The generated network is saved in the "network" variable which is an one-dimensional array. You can access it by typing result$network in R. 
+
+
+
+II ABC Algorithm 
+-----------------------------------------------------------
+
+1. Compiling
+
+ The command to compile C code with R is as follows:
+
+	MAKEFLAGS='CFLAGS=-Iinclude PKG_CFLAGS=-w' R CMD SHLIB src/network_random.c src/graph.c src/motif.c src/utils.c src/pool.c src/abc_R.c -o abc_R.so
+
+2. Running
+
+ To load the shared object and call the C method from R follow these commands:
+
+	dyn.load("abc_R.so")
+ 	result=.C("abc", as.double(data), as.integer(number_genes), as.integer(number_times), as.integer(clust_size), as.double(clust_coeffs), as.double(tolerance), as.integer(number_hubs), as.integer(iterations), as.integer(number_networks), number_accepted=as.integer(0), dist=as.double(1:number_networks), hp=as.double(hub_probs), np=as.double(neighbour_probs), as.integer(is_probs))
+ 
+  Explanation of the parameters:
+
+  abc: it is the name of the C function.
+  data: one-dimensional microarray data. Any microarray data in the form of a matrix should be converted to one-dimensional array in a row-major format. An example data array based on microarray data is included in this package (microarray_for_R_example.txt).	
+  number_genes: number of genes in the microarray data.
+  number_times: number of time points in the microarray data.
+  clust_size: number of clustering coefficients. This is the size of the array clust_coeffs.
+  clust_coeffs: one dimensional array of size clust_size of clustering coefficients.  
+  tolerance: a real value based on which the generated networks are compared to the reference network
+  number_hubs: number of hubs in the network. Example: 3, 4 etc.
+  iterations: number of times to repeat ABC algorithm. Example: 5, 20, ...
+  number_networks: number of generated networks in each iteration of the ABC algorithm. Example: 10000, 50000, 1000000, ... 
+  number_accepted: restores number of accepted networks in the last iteration of the ABC algorithm
+  hub_probs: one-dimensional array of size number_genes for the each label to be in the role of a hub. Example of this array is included in this directory (hub_probs_example.txt)
+  neighbour_probs: this is one-dimensional array of neighbour probabilities of size number_nodes*number_nodes. Example is included in this directory (neighbour_probs_example.txt)
+  is_probs: this needs to be set either to one (if you specify hub_probs and neighbour_probs) or to zero (if neither probabilities are specified). Attention: you should specify both hub_probs and neighbour_probs if is_probs is one. If is_prob is zero these arrays should simply indicate an array of a specified size. For example: hub_probs=as.double(1:number_genes).
+
+ ATTENTION:All matrices should be converted to one-dimensional arrays in a row-major format.Example, 001 when converted to an array will be 001101010.
+												     101	
+												     010
+
+
+III Comments/questions/error reports
+-----------------------------------------------------------
+Any comment/question/error should be reported to khmusayeva@gmail.com
+
+
+IV License
+-----------------------------------------------------------
+Refer to COPYING.txt
+
+
+V References 
+-----------------------------------------------------------
+1. Di Camillo, B., Toffolo, G., and Cobelli, C. (2009). A gene network simulator to assess reverse engineering algorithms. Annals of the New York Academy of Sciences, 1158(1), 125-142.
+
