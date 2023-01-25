@@ -7,13 +7,13 @@ I Network generation algorithm
 
 1. Create the shared object:
 
-       MAKEFLAGS='CFLAGS=-Iinclude PKG_CFLAGS=-w' R CMD SHLIB src/network.c src/graph.c src/motif.c src/utils.c src/pool.c  -o network.so
+     MAKEFLAGS='CFLAGS=-Iinclude PKG_CFLAGS=-w' R CMD SHLIB src/network.c src/graph.c src/motif.c src/utils.c src/pool.c  -o network_R.so
 	
 2. Run the shared object from R:
 
- To load and run network.so from R follow these commands:
+ To load and run network_R.so from R follow these commands:
 		
-    dyn.load("network_random_R.so")
+    dyn.load("network_R.so")
     result=.C("run", as.integer(number_genes), as.integer(clust_coef), network=as.integer(1:(number_genes*number_genes)))
 
 
@@ -35,13 +35,13 @@ II ABC Algorithm
 
 1. Create the shared object:
 
-	MAKEFLAGS='CFLAGS=-Iinclude PKG_CFLAGS=-w' R CMD SHLIB src/network.c src/graph.c src/motif.c src/utils.c src/pool.c src/abc.c -o abc.so
+	MAKEFLAGS='CFLAGS=-Iinclude PKG_CFLAGS=-w' R CMD SHLIB src/network.c src/graph.c src/motif.c src/utils.c src/pool.c src/abc.c -o abc_R.so
 
 2. Run the shared object from R:
 
  To load the shared object and call the abc method from R follow these commands:
 
-	dyn.load("abc.so")
+	dyn.load("abc_R.so")
  	result=.C("abc", as.double(data), as.integer(number_genes), as.integer(number_times), as.integer(clust_size), as.double(clust_coeffs), as.double(tolerance), as.integer(number_hubs), as.integer(iterations), as.integer(number_networks), number_accepted=as.integer(0), dist=as.double(1:number_networks), hp=as.double(hub_probs), np=as.double(neighbour_probs), as.integer(is_probs))
   
   Explanation of the parameters:
